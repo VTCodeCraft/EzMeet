@@ -10,7 +10,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { XIcon } from "lucide-react"; // Replace with your actual icon
 import TimeSelector from "@/components/TimeSelector";
-import { DayOfWeek } from "@/lib/availability";
 import { cn } from "@/lib/utils";
 
 interface DayAvailabilityProps {
@@ -53,7 +52,7 @@ const DayAvailability = ({
             }}
           />
           <Label className="ml-2.5 text-[15px] font-semibold uppercase">
-            {dayMapping[day] as DayOfWeek}
+            {dayMapping[day]}
           </Label>
         </div>
       </div>
