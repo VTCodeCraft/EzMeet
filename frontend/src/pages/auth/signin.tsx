@@ -1,13 +1,17 @@
-import { SignInForm } from "./components/sign-in-form";
+import { SignIn } from "@clerk/react";
+import { AUTH_ROUTES, PROTECTED_ROUTES } from "@/routes/common/routePaths";
 
-const SignIn = () => {
+const SignInPage = () => {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
-      <div className="w-full max-w-[500px] mx-auto">
-        <SignInForm />
-      </div>
+      <SignIn
+        routing="path"
+        path={AUTH_ROUTES.SIGN_IN}
+        signUpUrl={AUTH_ROUTES.SIGN_UP}
+        forceRedirectUrl={PROTECTED_ROUTES.EVENT_TYPES}
+      />
     </div>
   );
 };
 
-export default SignIn;
+export default SignInPage;

@@ -1,22 +1,16 @@
 import { IntegrationAppType, VideoConferencingPlatform } from "@/lib/types";
 
-export type loginType = { email: string; password: string };
-export type LoginResponseType = {
-  message: string;
-  user: {
-    id: string;
-    name: string;
-    username: string;
-    email: string;
-  };
-  accessToken: string;
-  expiresAt: number;
+export type CurrentUserType = {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  imageUrl: string | null;
 };
 
-export type registerType = {
-  name: string;
-  email: string;
-  password: string;
+export type CurrentUserResponseType = {
+  message: string;
+  user: CurrentUserType;
 };
 
 export type CreateEventPayloadType = {

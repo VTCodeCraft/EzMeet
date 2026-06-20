@@ -1,8 +1,10 @@
-import {Router} from 'express';
-import { loginController, registerController } from '../controllers/auth.controller';
+import { Router } from "express";
+import { requireAuth } from "../middlewares/requireAuth.middleware";
+import { getCurrentUserController } from "../controllers/auth.controller";
 
 const authRoutes = Router();
-authRoutes.post('/register', registerController)
-authRoutes.post('/login', loginController);
+
+// Returns (and lazily provisions) the local user for the current Clerk session.
+authRoutes.get("/me", requireAuth, getCurrentUserController);
 
 export default authRoutes;

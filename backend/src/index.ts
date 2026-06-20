@@ -1,7 +1,7 @@
 import "dotenv/config";
-import "./config/passport.config";
 import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
+import { clerkMiddleware } from "@clerk/express";
 import { config } from "./config/app.config";
 import { HTTPSTATUS } from "./config/http.config";
 import { errorHandler } from "./middlewares/errorHandler.middlewares";
@@ -10,7 +10,6 @@ import { BadRequestException } from "./utils/app-error";
 import { initializeDatabase } from "./database/database";
 import { auth } from "googleapis/build/src/apis/abusiveexperiencereport";
 import authRoutes from "./routes/auth.route";
-import passport from "passport";
 import eventRoutes from "./routes/event.route";
 import availabilityRoutes from "./routes/availability.route"; 
 import integrationRoutes from "./routes/integration.route";
@@ -29,7 +28,8 @@ app.use(cors({
          credentials: true,
 }));
 
-app.use(passport.initialize());
+// Attaches Clerk auth state to every request; `requireAuth` consumes it per-route.
+app.use(clerkMiddleware());
 
 // Base Route
 app.get("/", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {

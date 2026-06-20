@@ -1,35 +1,25 @@
 import { HTTPSTATUS } from "../config/http.config";
 import { Request, Response } from "express";
-import { asyncHandleAndValidate } from "../middlewares/withValidation.middleware";
-import { LoginDto, RegisterDto } from "../database/dto/auth.dto";
-import { loginService, registerService } from "../services/auth.service";
+import { asyncHandler } from "../middlewares/AsyncHandler.middleware";
+import { NotFoundException } from "../utils/app-error";
+import { findByIDuserService } from "../services/user.service";
 
+/**
+ * Returns the local user backing the authenticated Clerk session. The user row
+ * is guaranteed to exist by `requireAuth` (lazy find-or-create).
+ */
+export const getCurrentUserController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.user?.id as string;
 
-export const registerController = asyncHandleAndValidate(
-        RegisterDto,
-        'body',
-        async (req: Request, res: Response, registerDto) => {
+    const user = await findByIDuserService(userId);
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
 
-                const { user } = await registerService(registerDto)
-
-                return res.status(HTTPSTATUS.CREATED).json({
-                        message: "User registered successfully",
-                        user,
-                });
-        }
+    return res.status(HTTPSTATUS.OK).json({
+      message: "User fetched successfully",
+      user,
+    });
+  }
 );
-
-export const loginController = asyncHandleAndValidate(
-        LoginDto,
-        'body',
-        async (req: Request, res: Response, loginDto) => {
-
-                const {user,accessToken,expiresAt} = await loginService(loginDto);
-                return res.status(HTTPSTATUS.CREATED).json({
-                        message: "User logged in successfully",
-                        user,
-                        accessToken,
-                        expiresAt,
-                });
-        }
-)

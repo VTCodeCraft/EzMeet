@@ -1,12 +1,22 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useStore } from "@/store/store";
+import { useAuth } from "@clerk/react";
+import { AUTH_ROUTES } from "./common/routePaths";
+import { Loader } from "@/components/loader";
 
 const ProtectedRoute = () => {
-  const { accessToken } = useStore();
+  const { isLoaded, isSignedIn } = useAuth();
 
-  if (accessToken) return <Outlet />;
+  if (!isLoaded) {
+    return (
+      <div className="flex min-h-svh items-center justify-center">
+        <Loader size="lg" />
+      </div>
+    );
+  }
 
-  return <Navigate to="/" replace />;
+  if (isSignedIn) return <Outlet />;
+
+  return <Navigate to={AUTH_ROUTES.SIGN_IN} replace />;
 };
 
 export default ProtectedRoute;

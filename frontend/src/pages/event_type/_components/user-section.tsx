@@ -1,10 +1,10 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ENV } from "@/lib/get-env";
 import NewEventDialog from "./new-event-dialog";
-import { useStore } from "@/store/store";
+import useCurrentUser from "@/hooks/use-current-user";
 
 const UserSection = (props: { username: string }) => {
-  const { user } = useStore();
+  const { user } = useCurrentUser();
   const username = props.username || user?.username;
   const my_link = `${ENV.VITE_APP_ORIGIN}/${username}`;
   return (
@@ -15,6 +15,7 @@ const UserSection = (props: { username: string }) => {
       <div className="flex items-center p-[16px_0_8px] gap-3">
         <div className="w-[54px] h-[54px] flex items-center justify-center">
           <Avatar className="!w-[45px] !h-[45px] !p-px border-2 border-[#CCCCCC] transition-colors">
+            <AvatarImage src={user?.imageUrl ?? undefined} alt={user?.name} />
             <AvatarFallback className="bg-[#e7edf6] uppercase">
               {user?.name?.charAt(0)}
             </AvatarFallback>

@@ -8,9 +8,11 @@ import Integrations from "@/pages/integrations";
 import UserEventsPage from "@/pages/external_page/user-events";
 import UserSingleEventPage from "@/pages/external_page/user-single-event";
 
+// Splat paths so Clerk's path-based routing can own its internal sub-steps
+// (e.g. /sign-in/factor-one, /sign-up/verify-email-address).
 export const authenticationRoutePaths = [
-  { path: AUTH_ROUTES.SIGN_IN, element: <SignIn /> },
-  { path: AUTH_ROUTES.SIGN_UP, element: <SignUp /> },
+  { path: `${AUTH_ROUTES.SIGN_IN}/*`, element: <SignIn /> },
+  { path: `${AUTH_ROUTES.SIGN_UP}/*`, element: <SignUp /> },
 ];
 
 export const protectedRoutePaths = [

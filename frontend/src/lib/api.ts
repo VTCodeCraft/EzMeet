@@ -2,14 +2,12 @@ import {
   AvailabilityType,
   CreateEventPayloadType,
   CreateMeetingType,
+  CurrentUserResponseType,
   GetAllIntegrationResponseType,
-  LoginResponseType,
-  loginType,
   PeriodType,
   PublicAvailabilityEventResponseType,
   PublicEventResponseType,
   PublicSingleEventDetailResponseType,
-  registerType,
   ToggleEventVisibilityResponseType,
   UserAvailabilityResponseType,
   UserEventListResponse,
@@ -18,15 +16,12 @@ import {
 import { API, PublicAPI } from "./axios-client";
 import { IntegrationAppType, VideoConferencingPlatform } from "./types";
 
-export const loginMutationFn = async (
-  data: loginType
-): Promise<LoginResponseType> => {
-  const response = await API.post("/auth/login", data);
-  return response.data;
-};
-
-export const registerMutationFn = async (data: registerType) =>
-  await API.post("/auth/register", data);
+//*********** */ AUTH APIS
+export const getCurrentUserQueryFn =
+  async (): Promise<CurrentUserResponseType> => {
+    const response = await API.get("/auth/me");
+    return response.data;
+  };
 
 //*********** */ EVENT APIS
 export const CreateEventMutationFn = async (data: CreateEventPayloadType) =>

@@ -21,7 +21,7 @@ export const getdatabaseConfig = () => {
                   entities: [User, Integration, Event, Availability, Meeting, DayAvailability],
                   
                   migrations: [path.join(__dirname, "../database/migrations/**/*.{ts,js}")],
-                  synchronize: !isProduction,
+                  synchronize: false,
                   logging: !isProduction ? ["query", "error", "schema"] : ["error"],
                   ssl: isProduction ? {
                            rejectUnauthorized: true,

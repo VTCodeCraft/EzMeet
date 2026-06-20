@@ -1,6 +1,4 @@
 import {
-         BeforeInsert,
-         BeforeUpdate,
          Column,
          CreateDateColumn,
          Entity,
@@ -10,7 +8,6 @@ import {
          PrimaryGeneratedColumn,
          UpdateDateColumn,
 } from "typeorm";
-import * as bcrypt from "bcrypt";
 import { Integration } from "./integration.entity";
 import { Event } from "./event.entity";
 import { Availability } from "./availability.entities";
@@ -21,6 +18,10 @@ export class User {
          @PrimaryGeneratedColumn("uuid")
          id: string;
 
+         // Clerk user id (e.g. "user_2abc..."), the source of truth for auth identity
+         @Column({ unique: true, nullable: false })
+         clerkId: string;
+
          @Column({ nullable: false })
          name: string;
 
@@ -29,9 +30,6 @@ export class User {
 
          @Column({ unique: true, nullable: false })
          email: string;
-
-         @Column({ nullable: false })
-         password: string;
 
          @Column({ nullable: true })
          imageUrl: string;
@@ -65,22 +63,4 @@ export class User {
 
          @Column({ default: false })
          isVerified: boolean;
-
-
-         @BeforeInsert()
-         @BeforeUpdate()
-         async hashPassword() {
-                  if (this.password) {
-                           this.password = await bcrypt.hash(this.password, 10);
-                  }
-         }
-
-         async comparePassword(candidatePassword: string): Promise<boolean> {
-                  return bcrypt.compare(candidatePassword, this.password);
-         }
-
-         omitPassword(): Omit<User, "password"> {
-                  const { password, ...userWithoutPassword } = this;
-                  return userWithoutPassword as Omit<User, "password">;
-         }
 }

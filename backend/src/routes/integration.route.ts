@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { passportAuthenticateJwt } from "../config/passport.config";
+import { requireAuth } from "../middlewares/requireAuth.middleware";
 import { checkIntegrationController, connectAppController, getUserIntegrationsController, googleOAuthCallbackController } from "../controllers/integration.controller";
 
 
@@ -7,19 +7,19 @@ const integrationRoutes = Router();
 
 integrationRoutes.get(
   "/all",
-  passportAuthenticateJwt,
+  requireAuth,
   getUserIntegrationsController
 );
 
 integrationRoutes.get(
   "/check/:appType",
-  passportAuthenticateJwt,
+  requireAuth,
   checkIntegrationController
 );
 
 integrationRoutes.get(
   "/connect/:appType",
-  passportAuthenticateJwt,
+  requireAuth,
   connectAppController
 );
 
