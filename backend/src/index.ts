@@ -48,6 +48,17 @@ app.use(
 // Attaches Clerk auth state to every request; `requireAuth` consumes it per-route.
 app.use(clerkMiddleware());
 
+// Health check — lightweight, no DB dependency. Useful for verifying the
+// production URL is up and for platform health probes.
+app.get("/health", (req: Request, res: Response) => {
+         res.status(HTTPSTATUS.OK).json({
+                  status: "ok",
+                  uptime: process.uptime(),
+                  environment: config.NODE_ENV,
+                  timestamp: new Date().toISOString(),
+         });
+});
+
 // Base Route
 app.get("/", asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
                   throw new BadRequestException("Throwing async error");
