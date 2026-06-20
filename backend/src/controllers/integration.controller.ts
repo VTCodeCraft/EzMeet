@@ -20,7 +20,7 @@ export const getUserIntegrationsController = asyncHandler(
 
     return res.status(HTTPSTATUS.OK).json({
       message: "Fetched user integrations successfully",
-      integrations,
+      data: integrations,
     });
   }
 );

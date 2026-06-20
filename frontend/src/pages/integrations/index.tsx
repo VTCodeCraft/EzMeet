@@ -4,9 +4,28 @@ import { useQuery } from "@tanstack/react-query";
 import { getAllIntegrationQueryFn } from "@/lib/api";
 import { Loader } from "@/components/loader";
 import { ErrorAlert } from "@/components/ErrorAlert";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 const Integrations = () => {
-  const { data, isFetching, isError, error } = useQuery({
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const error = searchParams.get("error");
+    const success = searchParams.get("success");
+
+    if (error) {
+      toast.error(error);
+      navigate("/app/integrations", { replace: true });
+    } else if (success) {
+      toast.success("Integration connected successfully!");
+      navigate("/app/integrations", { replace: true });
+    }
+  }, [searchParams, navigate]);
+
+  const { data, isFetching, isError, error: queryError } = useQuery({
     queryKey: ["integration_list"],
     queryFn: getAllIntegrationQueryFn,
   });
@@ -20,7 +39,7 @@ const Integrations = () => {
         subtitle="Connect all your apps directly from here. You need to connect these apps"
       />
 
-      <ErrorAlert isError={isError} error={error} />
+      <ErrorAlert isError={isError} error={queryError} />
 
       <div className="relative flex flex-col gap-4">
         <section className="flex flex-col gap-4 text-muted-foreground">

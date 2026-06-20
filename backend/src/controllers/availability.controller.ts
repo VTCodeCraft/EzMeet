@@ -14,7 +14,7 @@ export const getUserAvailabilityController = asyncHandler(
 
     return res.status(HTTPSTATUS.OK).json({
       message: "Fetched availability successfully",
-      availability,
+      data: { availability },
     });
   }
 );

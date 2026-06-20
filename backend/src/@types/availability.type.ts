@@ -1,10 +1,10 @@
 export type AvailabilityResponseType = {
-  timezone: any;
+  timezone?: string;
   timeGap: number;
   days: {
     day: string;
-    timeSlots: { startTime: string; endTime: string }[];
-    breaks: { start: string; end: string }[];
+    startTime: string;
+    endTime: string;
     isAvailable: boolean;
   }[];
 };

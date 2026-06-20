@@ -23,10 +23,27 @@ const BASE_PATH = config.BASE_PATH || "/api";
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({
-         origin: config.FRONTEND_ORIGIN,
-         credentials: true,
-}));
+
+// CORS: allow one or more comma-separated frontend origins (e.g.
+// "http://localhost:5173,https://app.example.com"). Requests without an Origin
+// header (curl, server-to-server, Google OAuth redirects) are allowed through.
+const allowedOrigins = config.FRONTEND_ORIGIN.split(",")
+         .map((origin) => origin.trim())
+         .filter(Boolean);
+
+app.use(
+         cors({
+                  origin: (origin, callback) => {
+                           if (!origin || allowedOrigins.includes(origin)) {
+                                    return callback(null, true);
+                           }
+                           return callback(new Error(`Not allowed by CORS: ${origin}`));
+                  },
+                  credentials: true,
+                  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+                  allowedHeaders: ["Content-Type", "Authorization"],
+         })
+);
 
 // Attaches Clerk auth state to every request; `requireAuth` consumes it per-route.
 app.use(clerkMiddleware());

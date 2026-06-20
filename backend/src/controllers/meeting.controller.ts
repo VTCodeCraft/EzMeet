@@ -8,6 +8,7 @@ import {
   createMeetBookingForGuestService,
   getUserMeetingsService,
   cancelMeetingService,
+  cancelMeetingByGuestService,
 } from "../services/meeting.service";
 import { asyncHandleAndValidate } from "../middlewares/withValidation.middleware";
 import { CreateMeetingDto, MeetingIdDTO } from "../database/dto/meeting.dto";
@@ -55,6 +56,22 @@ export const cancelMeetingController = asyncHandleAndValidate(
     await cancelMeetingService(meetingIdDto.meetingId);
     return res.status(HTTPSTATUS.OK).json({
       messsage: "Meeting cancelled successfully",
+    });
+  }
+);
+
+// For Public (guest-initiated). Removes the meeting only from the guest's
+// calendar; requires the guest's email to match the booking.
+export const cancelMeetingByGuestController = asyncHandleAndValidate(
+  MeetingIdDTO,
+  "params",
+  async (req: Request, res: Response, meetingIdDto) => {
+    const guestEmail = (req.body?.guestEmail as string) || "";
+
+    await cancelMeetingByGuestService(meetingIdDto.meetingId, guestEmail);
+
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Meeting cancelled successfully",
     });
   }
 );

@@ -58,6 +58,14 @@ const IntegrationCard = ({
   const description = IntegrationDescriptions[appType];
 
   const handleConnect = async (appType: IntegrationAppType) => {
+    // Only Google Meet & Calendar is wired up for now.
+    if (appType !== IntegrationAppEnum.GOOGLE_MEET_AND_CALENDAR) {
+      toast.info("Coming soon", {
+        description: `${title} integration isn't available yet. Stay tuned!`,
+      });
+      return;
+    }
+
     setSelectedType(appType);
     setIsLoading(true);
     try {

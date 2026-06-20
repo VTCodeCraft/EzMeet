@@ -55,18 +55,31 @@ const createDefaultAvailability = async (user: User) => {
   const availabilityRepository = AppDataSource.getRepository(Availability);
   const dayAvailabilityRepository = AppDataSource.getRepository(DayAvailability);
 
-  const day = dayAvailabilityRepository.create({
-    day: DayOfWeekEnum.MONDAY,
-    timeSlots: [
-      { startTime: "2025-06-01T09:00:00Z", endTime: "2025-06-01T17:00:00Z" },
-    ],
-    breaks: [{ start: "2025-06-01T13:00:00Z", end: "2025-06-01T14:00:00Z" }],
-    isAvailable: true,
+  // Mon–Fri available 09:00–17:00, weekends off. Times are stored as "HH:mm"
+  // (the format the booking + meeting services expect).
+  const defaultAvailableDays = new Set<DayOfWeekEnum>([
+    DayOfWeekEnum.MONDAY,
+    DayOfWeekEnum.TUESDAY,
+    DayOfWeekEnum.WEDNESDAY,
+    DayOfWeekEnum.THURSDAY,
+    DayOfWeekEnum.FRIDAY,
+  ]);
+
+  const days = Object.values(DayOfWeekEnum).map((dayName) => {
+    const isAvailable = defaultAvailableDays.has(dayName);
+    return dayAvailabilityRepository.create({
+      day: dayName,
+      timeSlots: isAvailable
+        ? [{ startTime: "09:00", endTime: "17:00" }]
+        : [],
+      breaks: [],
+      isAvailable,
+    });
   });
 
   const availability = availabilityRepository.create({
     timeGap: 30,
-    days: [day],
+    days,
     user,
   });
 

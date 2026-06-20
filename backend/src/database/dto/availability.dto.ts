@@ -24,8 +24,8 @@ export class UpdateAvailabilityDto {
   days: {
     day: string;
     isAvailable: boolean;
-    timeSlots: { startTime: string; endTime: string }[];
-    breaks: { start: string; end: string }[];
+    startTime: string;
+    endTime: string;
   }[];
-  timezone: any;
+  timezone?: string;
 }

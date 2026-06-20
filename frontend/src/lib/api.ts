@@ -39,6 +39,11 @@ export const geteventListQueryFn = async (): Promise<UserEventListResponse> => {
   return response.data;
 };
 
+export const deleteEventMutationFn = async (eventId: string) => {
+  const response = await API.delete(`/event/${eventId}`);
+  return response.data;
+};
+
 //*********** */ INTEGRATION APIS
 
 export const checkIntegrationQueryFn = async (

@@ -1,17 +1,22 @@
 import { EventType } from "@/types/api.type";
 import EventCard from "./event-card";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toggleEventVisibilityMutationFn } from "@/lib/api";
+import { deleteEventMutationFn, toggleEventVisibilityMutationFn } from "@/lib/api";
 import { toast } from "sonner";
 import { useState } from "react";
 
 const EventListSection = (props: { events: EventType[]; username: string }) => {
   const { events, username } = props;
   const [pendingEventId, setPendingEventId] = useState<string | null>(null);
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
   const { mutate, isPending } = useMutation({
     mutationFn: toggleEventVisibilityMutationFn,
+  });
+
+  const { mutate: deleteEvent, isPending: isDeleting } = useMutation({
+    mutationFn: deleteEventMutationFn,
   });
 
   const toggleEventVisibility = (eventId: string) => {
@@ -29,10 +34,28 @@ const EventListSection = (props: { events: EventType[]; username: string }) => {
           toast.success(`${response.message}`);
         },
         onError: () => {
-          toast.success("Failed to switch event");
+          setPendingEventId(null);
+          toast.error("Failed to switch event");
         },
       }
     );
+  };
+
+  const handleDeleteEvent = (eventId: string) => {
+    setDeletingEventId(eventId);
+    deleteEvent(eventId, {
+      onSuccess: (response) => {
+        queryClient.invalidateQueries({
+          queryKey: ["event_list"],
+        });
+        setDeletingEventId(null);
+        toast.success(response?.message || "Event deleted successfully");
+      },
+      onError: (error) => {
+        setDeletingEventId(null);
+        toast.error(error?.message || "Failed to delete event");
+      },
+    });
   };
   return (
     <div className="w-full">
@@ -53,6 +76,8 @@ const EventListSection = (props: { events: EventType[]; username: string }) => {
             username={username}
             isPending={pendingEventId === event.id ? isPending : false}
             onToggle={() => toggleEventVisibility(event.id)}
+            isDeleting={deletingEventId === event.id ? isDeleting : false}
+            onDelete={() => handleDeleteEvent(event.id)}
           />
         ))}
       </div>

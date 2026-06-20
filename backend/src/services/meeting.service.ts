@@ -94,6 +94,7 @@ export const createMeetBookingForGuestService = async (
                   const response = await calendar.events.insert({
                            calendarId: "primary",
                            conferenceDataVersion: 1,
+                           sendUpdates: "all",
                            requestBody: {
                                     summary: `${guestName} - ${event.title}`,
                                     description: additionalInfo,
@@ -226,6 +227,7 @@ export const cancelMeetingService = async (meetingId: string) => {
                                              await calendar.events.delete({
                                                       calendarId: "primary",
                                                       eventId: meeting.calendarEventId,
+                                                      sendUpdates: "all",
                                              });
                                              break;
                                     default:
@@ -241,6 +243,133 @@ export const cancelMeetingService = async (meetingId: string) => {
          meeting.status = MeetingStatus.CANCELLED;
          await meetingRepository.save(meeting);
          return { success: true };
+};
+
+/**
+ * Guest-initiated cancellation. Unlike the organizer flow (which deletes the
+ * event for everyone), this only removes the guest from the calendar event's
+ * attendee list, so the event disappears from the guest's calendar but stays on
+ * the organizer's. The meeting row is marked CANCELLED.
+ *
+ * `guestEmail` must match the meeting's guest — this is the only authorization
+ * for this otherwise-public action, so the meeting id alone isn't enough.
+ */
+export const cancelMeetingByGuestService = async (
+         meetingId: string,
+         guestEmail: string
+) => {
+         const meetingRepository = AppDataSource.getRepository(Meeting);
+         const integrationRepository = AppDataSource.getRepository(Integration);
+
+         const meeting = await meetingRepository.findOne({
+                  where: { id: meetingId },
+                  relations: ["event", "event.user"],
+         });
+
+         if (!meeting) throw new NotFoundException("Meeting not found");
+
+         if (
+                  !guestEmail ||
+                  meeting.guestEmail.toLowerCase() !== guestEmail.toLowerCase()
+         ) {
+                  throw new BadRequestException(
+                           "Guest email does not match this meeting"
+                  );
+         }
+
+         if (meeting.status === MeetingStatus.CANCELLED) {
+                  return { success: true };
+         }
+
+         try {
+                  const calendarIntegration = await integrationRepository.findOne({
+                           where: {
+                                    user: { id: meeting.event.user.id },
+                                    app_type: meeting.calendarAppType,
+                           },
+                  });
+
+                  if (calendarIntegration && meeting.calendarEventId) {
+                           const { calendar, calendarType } = await getCalendarClient(
+                                    calendarIntegration.app_type,
+                                    calendarIntegration.access_token,
+                                    calendarIntegration.refresh_token,
+                                    calendarIntegration.expiry_date
+                           );
+
+                           switch (calendarType) {
+                                    case IntegrationAppTypeEnum.GOOGLE_MEET_AND_CALENDAR:
+                                             // Remove the guest from the attendee list. This drops the event
+                                             // from the guest's calendar while keeping it on the organizer's.
+                                             await calendar.events.patch({
+                                                      calendarId: "primary",
+                                                      eventId: meeting.calendarEventId,
+                                                      sendUpdates: "all",
+                                                      requestBody: {
+                                                               attendees: [{ email: meeting.event.user.email }],
+                                                      },
+                                             });
+                                             break;
+                                    default:
+                                             throw new BadRequestException(
+                                                      `Unsupported calendar provider: ${calendarType}`
+                                             );
+                           }
+                  }
+         } catch (error) {
+                  throw new BadRequestException(
+                           "Failed to remove guest from calendar event"
+                  );
+         }
+
+         meeting.status = MeetingStatus.CANCELLED;
+         await meetingRepository.save(meeting);
+         return { success: true };
+};
+
+/**
+ * Deletes the calendar event backing a meeting from the organizer's connected
+ * calendar provider. Safe to call when there is no calendar event or no
+ * matching integration (it just no-ops). Scoped to the meeting's own user.
+ */
+export const deleteMeetingFromCalendar = async (meeting: {
+         calendarEventId?: string | null;
+         calendarAppType?: IntegrationAppTypeEnum | null;
+         user?: { id: string } | null;
+}) => {
+         if (!meeting.calendarEventId || !meeting.calendarAppType) return;
+
+         const integrationRepository = AppDataSource.getRepository(Integration);
+
+         const integration = await integrationRepository.findOne({
+                  where: {
+                           ...(meeting.user?.id ? { user: { id: meeting.user.id } } : {}),
+                           app_type: meeting.calendarAppType,
+                  },
+         });
+
+         if (!integration) return;
+
+         const { calendar, calendarType } = await getCalendarClient(
+                  integration.app_type,
+                  integration.access_token,
+                  integration.refresh_token,
+                  integration.expiry_date
+         );
+
+         switch (calendarType) {
+                  case IntegrationAppTypeEnum.GOOGLE_MEET_AND_CALENDAR:
+                           await calendar.events.delete({
+                                    calendarId: "primary",
+                                    eventId: meeting.calendarEventId,
+                                    sendUpdates: "all",
+                           });
+                           break;
+                  default:
+                           throw new BadRequestException(
+                                    `Unsupported calendar provider: ${calendarType}`
+                           );
+         }
 };
 
 async function getCalendarClient(

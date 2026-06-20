@@ -1,9 +1,11 @@
 import { AppDataSource } from "../config/database.config";
 import { CreateEventDto, EventIdDto, UserNameAndSlugDTO } from "../database/dto/event.dto";
 import { Event, EventLocationEnumType } from "../database/entities/event.entity"
+import { MeetingStatus } from "../database/entities/meeting.entity";
 import { User } from "../database/entities/user.entity";
 import { BadRequestException, NotFoundException } from "../utils/app-error";
 import { slugify } from "../utils/helper";
+import { deleteMeetingFromCalendar } from "./meeting.service";
 
 export const createEventService = async(
   userId: string, 
@@ -166,11 +168,28 @@ export const deleteEventService = async (userId: string, eventId: string) => {
 
   const event = await eventRepository.findOne({
     where: { id: eventId, user: { id: userId } },
+    relations: ["meetings", "meetings.user"],
   });
 
   if (!event) {
     throw new NotFoundException("Event not found");
   }
+
+  // Remove the backing calendar events (e.g. Google Calendar) for any meetings
+  // under this event before the DB cascade wipes the meeting rows. Failures for
+  // an individual meeting shouldn't block deleting the event.
+  for (const meeting of event.meetings || []) {
+    if (meeting.status !== MeetingStatus.SCHEDULED) continue;
+    try {
+      await deleteMeetingFromCalendar(meeting);
+    } catch (error) {
+      console.error(
+        `Failed to delete calendar event for meeting ${meeting.id}:`,
+        error
+      );
+    }
+  }
+
   await eventRepository.remove(event);
 
   return { success: true };
