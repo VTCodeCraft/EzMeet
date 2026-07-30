@@ -23,9 +23,9 @@ export const getdatabaseConfig = () => {
                   migrations: [path.join(__dirname, "../database/migrations/**/*.{ts,js}")],
                   synchronize: false,
                   logging: !isProduction ? ["query", "error", "schema"] : ["error"],
-                  ssl: isProduction ? {
-                           rejectUnauthorized: true,
-                  } : {
+                  // Hosted Postgres providers (Render/Neon/etc.) use certs Node's CA
+                  // store doesn't trust; keep TLS on but skip chain verification.
+                  ssl: {
                            rejectUnauthorized: false,
                   }
          });
