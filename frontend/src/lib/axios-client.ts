@@ -25,6 +25,15 @@ API.interceptors.request.use(async (config) => {
 API.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (!error.response) {
+      const customError: CustomError = {
+        ...error,
+        message: error.message || "Network error. Please try again.",
+        errorCode: "NETWORK_ERROR",
+      };
+      return Promise.reject(customError);
+    }
+
     const { data, status } = error.response;
     if (status === 401) {
       window.location.href = "/sign-in";
@@ -46,6 +55,15 @@ export const PublicAPI = axios.create(options);
 PublicAPI.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (!error.response) {
+      const customError: CustomError = {
+        ...error,
+        message: error.message || "Network error. Please try again.",
+        errorCode: "NETWORK_ERROR",
+      };
+      return Promise.reject(customError);
+    }
+
     const { data } = error.response;
     const customError: CustomError = {
       ...error,
